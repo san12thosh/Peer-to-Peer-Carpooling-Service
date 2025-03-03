@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map with Route Calculation</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+        .highlight {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #007bff;
+            background-color: #e7f0ff;
+            border-radius: 5px;
+            color: #007bff;
+            font-size: 18px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(to right, #e0f7fa, #80deea);
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Map Route from {{ source_address }} to {{ destination_address }}</h1>
+    <div id="result" class="highlight"></div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([51.505, -0.09], 13);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Retrieve source and destination from Django template context
+        var sourceAddress = "{{ source_address }}";
+        var destinationAddress = "{{ destination_address }}";
+
+        // Geocode source and destination addresses
+        function geocode(address, callback) {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        callback([data[0].lat, data[0].lon]);
+                    } else {
+                        alert('Address not found: ' + address);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error geocoding address:', error);
+                    alert('Error geocoding address: ' + address);
+                });
+        }
+
+        // Geocode both addresses and create the route
+        geocode(sourceAddress, function(sourceLatLng) {
+            geocode(destinationAddress, function(destLatLng) {
+                L.Routing.control({
+                    waypoints: [
+                        L.latLng(sourceLatLng[0], sourceLatLng[1]),
+                        L.latLng(destLatLng[0], destLatLng[1])
+                    ],
+                    routeWhileDragging: true
+                }).addTo(map);
+                map.setView(sourceLatLng, 13);
+            });
+        });
+    </script>
+</body>
+</html>

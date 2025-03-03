@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fare Calculation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #6fd9e7);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease-in-out;
+        }
+        .container:hover {
+            transform: scale(1.03);
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            z-index: 0;
+            transition: background 0.3s ease-in-out;
+        }
+        .container:hover::before {
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.3), rgba(255,255,255,0));
+        }
+        h1 {
+            font-size: 28px;
+            background: linear-gradient(90deg, #4a90e2, #9013fe);
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+        p {
+            font-size: 18px;
+            color: #555;
+            z-index: 1;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .distance, .fare {
+            font-weight: bold;
+            background: linear-gradient(90deg, #4a90e2, #9013fe);
+            background-clip: text;
+            color: transparent;
+            z-index: 1;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        input[type="text"]:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+            transform: scale(1.02);
+        }
+        input[type="submit"] {
+            background-color: #4a90e2;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        input[type="submit"]:hover {
+            background-color: #357ABD;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fare Calculation</h1>
+        {% if error_message %}
+            <p class="error">{{ error_message }}</p>
+        {% else %}
+            {% if distance > 0 %}
+                <p class="distance">Distance: {{ distance }} km</p>
+                <p class="fare">Fare: {{ fare }} rupees</p>
+            {% endif %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="distance" placeholder="Enter distance in km" required>
+            <input type="submit" value="Calculate Fare">
+        </form>
+    </div>
+</body>
+</html>

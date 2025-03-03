@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain Rides</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #e0f7fa, #80deea); /* Gradient background */
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background-color: rgba(240, 84, 84, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        header h1 {
+            margin-bottom: 30px;
+            font-size: 28px;
+            color: #333;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            padding: 15px 30px;
+            font-size: 18px;
+            text-decoration: none;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            display: inline-block;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-rider {
+            background: linear-gradient(135deg, #007BFF 0%, #0056b3 100%);
+        }
+
+        .button-rider:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #0041a3 100%);
+            transform: scale(1.05);
+        }
+
+        .button-user {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+
+        .button-user:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: scale(1.05);
+        }
+
+        .quote {
+            font-size: 20px;
+            font-style: italic;
+            margin-top: 20px;
+            color: #f7f7f7;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Floating animated circles */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-100vh);
+            }
+        }
+
+        .circle-1 { width: 200px; height: 200px; top: 10%; left: 20%; }
+        .circle-2 { width: 150px; height: 150px; bottom: 20%; left: 60%; }
+        .circle-3 { width: 100px; height: 100px; top: 50%; right: 30%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Chain Rides</h1>
+        </header>
+        <main>
+            <div class="buttons">
+                <a href="{% url 'login_rider' %}" class="button button-rider">Rider Login</a>
+                <a href="{% url 'login_user' %}" class="button button-user">User Login</a>
+            </div>
+            <p class="quote">"The journey of a thousand miles begins with a single step."</p>
+            <p class="quote">"Carpooling: the road to a brighter, greener future."</p>
+        </main>
+        <!-- Floating circles for visual effect -->
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+</body>
+</html>

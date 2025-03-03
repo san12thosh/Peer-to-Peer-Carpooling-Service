@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matching Passengers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(to right, #e0f7fa, #80deea);
+            text-align: center;
+        }
+        #container {
+            margin: 0 auto;
+            max-width: 600px;
+            padding: 20px;
+        }
+        #loading-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            height: 25px;
+            margin-bottom: 20px;
+        }
+        #loading-progress {
+            width: 0;
+            height: 100%;
+            background-color: #007bff;
+            text-align: center;
+            color: white;
+            line-height: 25px;
+            border-radius: 5px;
+            position: absolute;
+        }
+        #message {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e7f0ff;
+            border: 1px solid #007bff;
+            color: #007bff;
+        }
+        .dialogue {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .pay-button {
+            margin-top: 20px;
+            display: none;
+        }
+        .sos-button {
+            margin-top: 20px;
+            background-color: #dc3545;
+        }
+        .sos-button:hover {
+            background-color: #c82333;
+        }
+        #sos-message {
+            display: none;
+            font-size: 18px;
+            color: #dc3545;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Matching Riders</h1>
+        <div id="loading-bar">
+            <div id="loading-progress">0%</div>
+        </div>
+        <div id="message" class="dialogue">
+            Please wait while we match you with available riders...
+        </div>
+        <button onclick="simulateLoading()">Search Riders</button>
+
+        <div id="matches-container" style="display: none;">
+            <h2>Matching Riders and Users</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rider Name</th>
+                        <th>Rider Source</th>
+                        <th>Rider Destination</th>
+                        <th>Passenger Source</th>
+                        <th>Passenger Destination</th>
+                        <th>Phone.No</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="matches-table-body">
+                    <!-- Matches will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pay-button">
+            <form action="{% url 'calculate_fare' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="distance" value="10"> <!-- Replace with actual distance data -->
+                <button type="submit">Pay</button>
+            </form>
+        </div>
+
+        <button class="sos-button" onclick="sendSOS()">SOS</button>
+        <div id="sos-message">SOS message sent! Location has been shared.</div>
+    </div>
+
+    <script>
+        const riders = [
+            {
+                Ridername: "Ajith",
+                source: "Sulur",
+                destination: "Singanallur",
+            },
+            {
+                Ridername: "Suriya",
+                source: "Sulur",
+                destination: "Singanallur"
+            }
+        ];
+
+        const users = [
+            {
+                PassengerName: "Vijay",
+                source: "Sulur",
+                destination: "Singanallur"
+            },
+            {
+                PassengerName: "Dhanush",
+                source: "Sulur",
+                destination: "Peelamedu"
+            }
+        ];
+
+        let progress = 0;
+        let loadingInterval;
+        let dialogueIndex = 0;
+        const dialogues = [
+            "Hang tight! We're finding the best match for you.",
+            "Just a moment! Your perfect ride is being located.",
+            "Almost there! We're making sure you get the best match.",
+            "Patience is a virtue! We're almost done matching.",
+            "Good things come to those who wait. Finding your match!"
+        ];
+
+        function findMatches() {
+            const matches = [];
+            riders.forEach(rider => {
+                users.forEach(user => {
+                    if (rider.source.toLowerCase() === user.source.toLowerCase() &&
+                        rider.destination.toLowerCase() === user.destination.toLowerCase()) {
+                        matches.push({
+                            rider_name: rider.Ridername,
+                            rider_source: rider.source,
+                            rider_destination: rider.destination,
+                            user_source: user.source,
+                            user_destination: user.destination,
+                            phone: generateRandomPhoneNumber()
+                        });
+                    }
+                });
+            });
+            return matches;
+        }
+
+        function updateProgress() {
+            progress += 10;
+            document.getElementById('loading-progress').style.width = progress + '%';
+            document.getElementById('loading-progress').textContent = progress + '%';
+
+            if (progress >= 100) {
+                clearInterval(loadingInterval);
+                document.getElementById('message').textContent = "Matching complete! Here is the List of Riders.";
+                displayMatches(findMatches());
+                document.getElementById('matches-container').style.display = 'block';
+            }
+        }
+
+        function updateDialogue() {
+            dialogueIndex = (dialogueIndex + 1) % dialogues.length;
+            document.getElementById('message').textContent = dialogues[dialogueIndex];
+        }
+
+        function simulateLoading() {
+            progress = 0;
+            document.getElementById('loading-progress').style.width = '0%';
+            document.getElementById('loading-progress').textContent = '0%';
+            document.getElementById('message').textContent = "Please wait while we match you with available riders...";
+            document.getElementById('matches-container').style.display = 'none';
+            document.querySelector('.pay-button').style.display = 'none';
+            document.getElementById('sos-message').style.display = 'none';
+
+            clearInterval(loadingInterval);
+            loadingInterval = setInterval(() => {
+                updateProgress();
+                updateDialogue();
+            }, 1000); // Update every second
+        }
+
+        function displayMatches(matches) {
+            const tbody = document.getElementById('matches-table-body');
+            tbody.innerHTML = '';
+
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${match.rider_name}</td>
+                        <td>${match.rider_source}</td>
+                        <td>${match.rider_destination}</td>
+                        <td>${match.user_source}</td>
+                        <td>${match.user_destination}</td>
+                        <td><span id="phone-${match.rider_name}" style="display: none;">${match.phone}</span></td>
+                        <td><button onclick="giveRequest('${match.rider_name}')">Give Request</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="7">No matches found.</td>';
+                tbody.appendChild(row);
+            }
+        }
+
+        function giveRequest(riderName) {
+            document.getElementById(`phone-${riderName}`).style.display = 'block';
+            setTimeout(() => {
+                generateOTP();
+            }, 5000); // Generate OTP after 5 seconds
+        }
+
+        function generateOTP() {
+            const correctOTP = "123456"; // Hardcoded OTP for demo purposes
+            alert(`Your OTP is: ${correctOTP}`);
+            setTimeout(() => {
+                document.querySelector('.pay-button').style.display = 'block';
+            }, 10000); // Show pay button after 10 seconds
+        }
+
+        function sendSOS() {
+            document.getElementById('sos-message').style.display = 'block';
+            alert("SOS message sent! Location has been shared.");
+            // Here, you would add the actual functionality to send the location or trigger an SOS alert.
+        }
+
+        function generateRandomPhoneNumber() {
+            const prefix = "+91";
+            const firstDigitOptions = [9, 8, 7, 6];
+            const firstDigit = firstDigitOptions[Math.floor(Math.random() * firstDigitOptions.length)];
+            const remainingDigits = Math.floor(100000000 + Math.random() * 900000000); // 9 digits after the first
+            return `${prefix}${firstDigit}${remainingDigits}`;
+        }
+
+        // Initialize with random dialogue
+        updateDialogue();
+    </script>
+</body>
+</html>

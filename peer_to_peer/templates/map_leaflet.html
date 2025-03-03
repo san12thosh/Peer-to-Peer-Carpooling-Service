@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map with Route Calculation</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(to right, #e0f7fa, #80deea);
+        }
+        #map {
+            height: 60vh;
+            width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .highlight {
+            border: 2px solid #ff5722;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- <h1>Enter Addresses and View Route</h1>
+    <form action="{% url 'map_leaflet' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Proceed</button>
+        <a href="{% url 'matching_passengers' %}" class="online-button">
+            <button type="button">Online</button>
+        </a>
+    </form>
+    <div id="result" class="highlight"></div>
+    <div id="map"></div> -->
+
+    <h1>Enter Addresses and View Route</h1>
+    <form id="address-form">
+        <label for="source">Source Address:</label>
+        <input type="text" id="source" name="source" placeholder="Enter source address" required>
+        <label for="destination">Destination Address:</label>
+        <input type="text" id="destination" name="destination" placeholder="Enter destination address" required>
+        <button type="submit">Proceed</button>
+        <a href="{% url 'matching_passengers' %}">
+            <button type="button">Online</button>
+        </a>
+    </form>
+    <div id="result" class="highlight"></div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([11.0168, 76.9558], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        function geocodeAddress(address, callback) {
+            fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const location = data[0];
+                        callback(location.lat, location.lon);
+                    } else {
+                        document.getElementById('result').innerHTML += `<p>No results found for "${address}".</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerHTML += `<p>An error occurred during geocoding: ${error.message}</p>`;
+                });
+        }
+
+        function getRoute(sourceLat, sourceLon, destLat, destLon) {
+            const url = `https://router.project-osrm.org/route/v1/driving/${sourceLon},${sourceLat};${destLon},${destLat}?overview=full&geometries=geojson`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.routes.length > 0) {
+                        const route = data.routes[0];
+                        const routeCoords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                        L.polyline(routeCoords, {color: 'blue'}).addTo(map);
+                        map.fitBounds(L.polyline(routeCoords).getBounds());
+                    } else {
+                        document.getElementById('result').innerHTML += `<p>No route found between the specified points.</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching the route:', error);
+                    document.getElementById('result').innerHTML += `<p>An error occurred while fetching the route: ${error.message}</p>`;
+                });
+        }
+
+        function displayResults(sourceAddress, sourceLat, sourceLon, destAddress, destLat, destLon, distance) {
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            L.marker([sourceLat, sourceLon]).addTo(map)
+                .bindPopup('Source: ' + sourceAddress)
+                .openPopup();
+            
+            L.marker([destLat, destLon]).addTo(map)
+                .bindPopup('Destination: ' + destAddress)
+                .openPopup();
+
+            document.getElementById('result').innerHTML = `
+                <p><strong>Source Latitude:</strong> ${sourceLat}</p>
+                <p><strong>Source Longitude:</strong> ${sourceLon}</p>
+                <p><strong>Destination Latitude:</strong> ${destLat}</p>
+                <p><strong>Destination Longitude:</strong> ${destLon}</p>
+                <p><strong>Distance:</strong> ${distance.toFixed(2)} km</p>
+            `;
+
+            getRoute(sourceLat, sourceLon, destLat, destLon);
+        }
+
+        // Handle form submission
+        document.getElementById('address-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const sourceAddress = document.getElementById('source').value;
+            const destinationAddress = document.getElementById('destination').value;
+
+            document.getElementById('result').innerHTML = '';
+
+            geocodeAddress(sourceAddress, function(sourceLat, sourceLon) {
+                geocodeAddress(destinationAddress, function(destLat, destLon) {
+                    const distance = calculateDistance(sourceLat, sourceLon, destLat, destLon);
+                    displayResults(sourceAddress, sourceLat, sourceLon, destinationAddress, destLat, destLon, distance);
+                });
+            });
+        });
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Initialize form with query parameters (if any)
+        function initForm() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const source = urlParams.get('source');
+            const destination = urlParams.get('destination');
+            if (source && destination) {
+                document.getElementById('source').value = source;
+                document.getElementById('destination').value = destination;
+                document.getElementById('address-form').dispatchEvent(new Event('submit'));
+            }
+        }
+
+        initForm();
+    </script>
+</body>
+</html>

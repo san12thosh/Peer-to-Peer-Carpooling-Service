@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment</title>
+    <style>
+        @keyframes blink {
+            0% { color: red; }
+            25% { color: blue; }
+            50% { color: green; }
+            75% { color: orange; }
+            100% { color: purple; }
+        }
+
+        .blinking {
+            animation: blink 1s infinite;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment</h1>
+    <p>Your fare is: {{ fare }}</p>
+    <form action="{% url 'payment' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="fare" value="{{ fare }}">
+        <button type="submit">Proceed to Payment</button>
+    </form>
+
+    
+    <!-- <form action="{% url 'get_balance' %}" method="get">
+    <button type="submit">Check Balance</button> -->
+    </form>
+</body>
+</html>

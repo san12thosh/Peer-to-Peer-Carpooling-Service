@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 25px;
+            color: #335;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #28a749;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .error {
+            color: red;
+            display: none;
+        }
+    </style>
+    <script>
+        function validateForm() {
+            const Username = document.getElementById('Username').value;
+            const usernameError = document.getElementById('usernameError');
+
+            usernameError.style.display = 'none';
+
+            let isValid = true;
+
+            if (Username.length > 10) {
+                usernameError.textContent = 'Username must be 10 characters or less.';
+                usernameError.style.display = 'block';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function handleSubmit(event) {
+            if (!validateForm()) {
+                event.preventDefault();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Create Account</h1>
+        </header>
+        <main>
+            <form action="{% url 'create_rider_acc' %}" method="post" onsubmit="handleSubmit(event)">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div id="usernameError" class="error"></div>
+                <button type="submit">Create Account</button>
+            </form>
+        </main>
+    </div>
+</body>
+</html>
